@@ -31,6 +31,7 @@ int main(int argc, char const *argv[]) {
 	else
 	{
 		printf("El formato a ingresar es: <num_hilos_prod> <tiempo_prod> <num_hilos_cons> <tiempo_cons> <tam_cola> <total_items>\n");
+		exit(-1);
 		
 	}
 
