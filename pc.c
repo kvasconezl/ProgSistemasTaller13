@@ -26,6 +26,7 @@ void *producir(void *arg) {
             if (cont_p == max) {
                 done = 1;
                 pthread_mutex_unlock(&mutex);
+                pthread_cond_broadcast(&cv2);
             } else {
                 cola++;
                 printf("El hilo %lu ha producido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
@@ -35,7 +36,6 @@ void *producir(void *arg) {
                 printf("MAX: %d cont_p: %d\n", max, cont_p);
             }
         } else {
-            pthread_cond_broadcast(&cv2);
             return (void *) 0;
         }
     }
@@ -43,32 +43,25 @@ void *producir(void *arg) {
 
 void *consumir(void *arg) {
     while (1) {
-        // if (!done) {
-        pthread_mutex_lock(&mutex);
-        while (cola == 0) {
-            pthread_cond_wait(&cv2, &mutex);
-        }
-        sleep(t_cons);
-        cola--;
-        printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
-        pthread_mutex_unlock(&mutex);
-        pthread_cond_broadcast(&cv1);
-
-        if (cont_p == max && cola == 0) {
-            done = 1;
-        }
-        if (cont_p == max && cola != 0) {
-            done = 0;
-        }
-        // pthread_mutex_unlock(&mutex);
-        // pthread_cond_broadcast(&cv1);
-        if (done) {
+        if (!done) {
+            pthread_mutex_lock(&mutex);
+            while (cola == 0) {
+                pthread_cond_wait(&cv2, &mutex);
+            }
+            sleep(t_cons);
+            cola--;
+            printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
+            pthread_mutex_unlock(&mutex);
+            pthread_cond_broadcast(&cv1);
+            if (cont_p == max && cola == 0) {
+                done = 1;
+            }
+            if (cont_p == max && cola != 0) {
+                done = 0;
+            }
+        } else {
             return (void *) 0;
         }
-        // } else {
-        //     pthread_cond_broadcast(&cv1);
-        //     return (void *) 0;
-        // }
     }
 }
 
