@@ -18,6 +18,7 @@ int done = 0;
 void *producir(void *arg) {
     while (1) {
         if (!done) {
+            printf("IF PRODUCTOR\n");
             pthread_mutex_lock(&mutex);
             while (cola == tam_cola) {
                 pthread_cond_wait(&cv1, &mutex);
@@ -36,33 +37,43 @@ void *producir(void *arg) {
                 printf("MAX: %d cont_p: %d\n", max, cont_p);
             }
         } else {
-            return (void *) 0;
+            printf("BREAK PRODUCTOR\n");
+            break;
         }
     }
+    pthread_cond_broadcast(&cv2);
+    printf("RETORNO PRODUCTOR\n");
+    return NULL;
 }
 
 void *consumir(void *arg) {
-    while (1) {
-        if (!done) {
-            pthread_mutex_lock(&mutex);
-            while (cola == 0) {
-                pthread_cond_wait(&cv2, &mutex);
+    if (cola > 0) {
+        done = 0;
+    }
+    if (!done) {
+        while (1) {
+            if (!done) {
+                printf("IF CONSUMIDOR\n");
+                pthread_mutex_lock(&mutex);
+                while (cola == 0) {
+                    pthread_cond_wait(&cv2, &mutex);
+                }
+                sleep(t_cons);
+                cola--;
+                printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
+                pthread_mutex_unlock(&mutex);
+                pthread_cond_broadcast(&cv1);
+                if (cont_p == max && cola == 0) {
+                    done = 1;
+                }
+            } else {
+                printf("BREAK CONSUMIDOR\n");
+                break;
             }
-            sleep(t_cons);
-            cola--;
-            printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
-            pthread_mutex_unlock(&mutex);
-            pthread_cond_broadcast(&cv1);
-            if (cont_p == max && cola == 0) {
-                done = 1;
-            }
-            if (cont_p == max && cola != 0) {
-                done = 0;
-            }
-        } else {
-            return (void *) 0;
         }
     }
+    printf("RETORNO CONSUMIDOR\n");
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -85,7 +96,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_hilos_p; i++) {
         status = pthread_create(&threads_p[i], NULL, producir, NULL);
         if (status != 0) {
-            printf("Error al crear el hilo %d\n.", i + 1);
+            printf("Error al crear el hilo productor %d\n.", i + 1);
         }
     }
 
