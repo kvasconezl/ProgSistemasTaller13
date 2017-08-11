@@ -41,7 +41,6 @@ void *producir(void *arg) {
             break;
         }
     }
-    pthread_cond_broadcast(&cv2);
     printf("RETORNO PRODUCTOR\n");
     return NULL;
 }
@@ -50,26 +49,27 @@ void *consumir(void *arg) {
     if (cola > 0) {
         done = 0;
     }
-    if (!done) {
-        while (1) {
-            if (!done) {
-                printf("IF CONSUMIDOR\n");
-                pthread_mutex_lock(&mutex);
-                while (cola == 0) {
-                    pthread_cond_wait(&cv2, &mutex);
-                }
-                sleep(t_cons);
-                cola--;
-                printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
-                pthread_mutex_unlock(&mutex);
-                pthread_cond_broadcast(&cv1);
-                if (cont_p == max && cola == 0) {
-                    done = 1;
-                }
-            } else {
-                printf("BREAK CONSUMIDOR\n");
-                break;
+    while (1) {
+        // if (cola > 0) {
+        //     done = 0;
+        // }
+        if (!done) {
+            printf("IF CONSUMIDOR\n");
+            pthread_mutex_lock(&mutex);
+            while (cola == 0) {
+                pthread_cond_wait(&cv2, &mutex);
             }
+            sleep(t_cons);
+            cola--;
+            printf("El hilo %lu ha consumido 1 item, tamaño de la cola = %d.\n", pthread_self(), cola);
+            pthread_mutex_unlock(&mutex);
+            pthread_cond_broadcast(&cv1);
+            if (cont_p == max && cola == 0) {
+                done = 1;
+            }
+        } else {
+            printf("BREAK CONSUMIDOR\n");
+            break;
         }
     }
     printf("RETORNO CONSUMIDOR\n");
